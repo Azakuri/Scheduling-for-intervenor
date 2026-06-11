@@ -1,10 +1,10 @@
-const CACHE_NAME = "intervenor-scheduler-v4";
+const CACHE_NAME = "intervenor-scheduler-v2";
 const APP_FILES = [
   "./",
   "./index.html",
-  "./styles.css?v=4",
-  "./app.js?v=4",
-  "./manifest.webmanifest?v=4",
+  "./styles.css?v=2",
+  "./app.js?v=2",
+  "./manifest.webmanifest?v=2",
   "./icons/icon.svg"
 ];
 
