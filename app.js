@@ -1,4 +1,4 @@
-const STORAGE_KEY = "intervenor-scheduler-v1";
+const STORAGE_KEY = "intervenor-scheduler-v2";
 const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const shortDayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
