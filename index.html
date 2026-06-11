@@ -12,15 +12,15 @@
   <link rel="apple-touch-icon" href="icons/icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
   <main class="app-shell">
     <header class="topbar">
-      <div>
-        <p class="eyebrow">The Intervenor</p>
-        <h1>Planner</h1>
+      <div class="header-center">
+        <h1>THE INTERVENOR</h1>
+        <p class="subtitle">PLANNER</p>
       </div>
     </header>
 
@@ -73,7 +73,18 @@
             <input id="eventEnd" type="time" value="11:00" required>
           </label>
         </div>
-        <button class="primary-button" type="submit">Add and auto assign</button>
+        <label>
+          Semester
+          <select id="eventSemester">
+            <option value="both">Both</option>
+            <option value="1st">1st Sem</option>
+            <option value="2nd">2nd Sem</option>
+          </select>
+        </label>
+        <div class="two-grid">
+          <button class="primary-button" type="submit">Add and auto assign</button>
+          <button class="ghost-button" type="button" id="addManualButton">Add manually</button>
+        </div>
       </form>
 
       <div class="section-heading inline">

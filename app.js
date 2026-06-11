@@ -56,7 +56,8 @@ const sampleState = {
       start: "07:00",
       end: "08:30",
       needed: 2,
-      assigned: []
+      assigned: [],
+      semester: "both"
     }
   ]
 };
@@ -99,6 +100,7 @@ function initialize() {
   elements.eventForm.addEventListener("submit", addEvent);
   elements.memberForm.addEventListener("submit", addMember);
   elements.schoolForm.addEventListener("submit", addSchoolBlock);
+  $("#addManualButton").addEventListener("click", addEventManually);
   $("#autoAssignAllButton").addEventListener("click", () => {
     autoAssignAll();
     render();
@@ -135,6 +137,7 @@ function loadState() {
     saved.events.forEach((event) => {
       event.completed ||= false;
       event.assigned ||= [];
+      event.semester ||= "both";
     });
     return saved;
   } catch {
@@ -165,7 +168,8 @@ function addEvent(event) {
     start: $("#eventStart").value,
     end: $("#eventEnd").value,
     needed: Math.max(1, Number($("#eventNeeded").value)),
-    assigned: []
+    assigned: [],
+    semester: $("#eventSemester").value
   };
 
   if (!isValidTimeRange(newEvent.start, newEvent.end)) {
@@ -180,8 +184,39 @@ function addEvent(event) {
   $("#eventNeeded").value = 2;
   $("#eventStart").value = "09:00";
   $("#eventEnd").value = "11:00";
+  $("#eventSemester").value = "both";
   saveState();
   render();
+}
+
+function addEventManually(event) {
+  event.preventDefault();
+  const newEvent = {
+    id: uid("event"),
+    title: $("#eventTitle").value.trim(),
+    date: $("#eventDate").value,
+    start: $("#eventStart").value,
+    end: $("#eventEnd").value,
+    needed: Math.max(1, Number($("#eventNeeded").value)),
+    assigned: [],
+    semester: $("#eventSemester").value
+  };
+
+  if (!isValidTimeRange(newEvent.start, newEvent.end)) {
+    alert("Event end time must be after start time.");
+    return;
+  }
+
+  state.events.unshift(newEvent);
+  elements.eventForm.reset();
+  $("#eventDate").value = todayValue();
+  $("#eventNeeded").value = 2;
+  $("#eventStart").value = "09:00";
+  $("#eventEnd").value = "11:00";
+  $("#eventSemester").value = "both";
+  saveState();
+  render();
+  activateTab("events");
 }
 
 function addMember(event) {
@@ -369,6 +404,7 @@ function renderEventCard(event, mode) {
   const doneButton = event.completed
     ? `<button class="ghost-button" type="button" data-action="reopen-event" data-id="${event.id}">Reopen</button>`
     : `<button class="primary-button" type="button" data-action="complete-event" data-id="${event.id}">Mark done</button>`;
+  const semesterLabel = event.semester === "both" ? "Both semesters" : event.semester === "1st" ? "1st Sem" : "2nd Sem";
 
     return `
       <article class="event-card">
@@ -376,6 +412,7 @@ function renderEventCard(event, mode) {
           <div>
             <h3 class="card-title">${escapeHtml(event.title)}</h3>
             <p class="meta">${formatDate(event.date)} - ${formatTime(event.start)}-${formatTime(event.end)} - ${dayNames[new Date(`${event.date}T00:00:00`).getDay()]}</p>
+            <p class="meta">${semesterLabel}</p>
           </div>
           <span class="badge ${statusClass}">${statusText}</span>
         </div>
@@ -408,6 +445,18 @@ function bindEventActions(container) {
   container.querySelectorAll("[data-action='transfer-event']").forEach((select) => {
     select.addEventListener("change", () => {
       transferEventSlot(select.dataset.id, Number(select.dataset.slot), select.value);
+    });
+  });
+
+  container.querySelectorAll("[data-action='remove-assignment']").forEach((button) => {
+    button.addEventListener("click", () => {
+      removeEventAssignment(button.dataset.id, Number(button.dataset.slot));
+    });
+  });
+
+  container.querySelectorAll("[data-action='add-assignment']").forEach((button) => {
+    button.addEventListener("click", () => {
+      addEventAssignmentSlot(button.dataset.id);
     });
   });
 
@@ -449,12 +498,18 @@ function renderAssignmentControls(event) {
     ].join("");
 
     return `
-      <label>
-        Assignment ${slot + 1}
-        <select data-action="transfer-event" data-id="${event.id}" data-slot="${slot}">
-          ${options}
-        </select>
-      </label>
+      <div style="display: grid; gap: 6px;">
+        <label>
+          Assignment ${slot + 1}
+          <select data-action="transfer-event" data-id="${event.id}" data-slot="${slot}">
+            ${options}
+          </select>
+        </label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+          <button class="ghost-button" type="button" data-action="remove-assignment" data-id="${event.id}" data-slot="${slot}" style="font-size: 0.8rem; min-height: 36px;">Remove</button>
+          ${slot === slotCount - 1 ? `<button class="ghost-button" type="button" data-action="add-assignment" data-id="${event.id}" style="font-size: 0.8rem; min-height: 36px;">+ Add</button>` : `<div></div>`}
+        </div>
+      </div>
     `;
   }).join("");
 }
@@ -472,16 +527,31 @@ function renderMembers() {
           <h3 class="card-title">${escapeHtml(member.name)}</h3>
           <p class="meta">${escapeHtml(member.role)} - ${member.school.length} school block${member.school.length === 1 ? "" : "s"}</p>
         </div>
-        <div class="output-box" aria-label="Output counter">
-          <button class="counter-button" type="button" data-action="minus-output" data-id="${member.id}" aria-label="Decrease output">-</button>
-          <input class="output-input" type="number" min="0" value="${totalOutputs(member)}" data-action="edit-output" data-id="${member.id}" aria-label="Total outputs">
-          <button class="counter-button" type="button" data-action="plus-output" data-id="${member.id}" aria-label="Increase output">+</button>
-        </div>
       </div>
       <div class="badge-row">
         <span class="badge">1st Sem: ${member.first}</span>
         <span class="badge">2nd Sem: ${member.second}</span>
         <span class="badge ok">Total: ${totalOutputs(member)}</span>
+      </div>
+      <div class="output-box" aria-label="Output counter">
+        <div style="display: grid; gap: 8px; grid-template-columns: 1fr 1fr;">
+          <div>
+            <small style="color: #667085; font-weight: 800; display: block; margin-bottom: 4px;">1st Sem</small>
+            <div style="display: grid; grid-template-columns: 40px minmax(56px, 72px) 40px; gap: 6px; align-items: center;">
+              <button class="counter-button" type="button" data-action="minus-output-first" data-id="${member.id}" aria-label="Decrease 1st sem">-</button>
+              <input class="output-input" type="number" min="0" value="${member.first}" data-action="edit-output-first" data-id="${member.id}" aria-label="1st sem outputs">
+              <button class="counter-button" type="button" data-action="plus-output-first" data-id="${member.id}" aria-label="Increase 1st sem">+</button>
+            </div>
+          </div>
+          <div>
+            <small style="color: #667085; font-weight: 800; display: block; margin-bottom: 4px;">2nd Sem</small>
+            <div style="display: grid; grid-template-columns: 40px minmax(56px, 72px) 40px; gap: 6px; align-items: center;">
+              <button class="counter-button" type="button" data-action="minus-output-second" data-id="${member.id}" aria-label="Decrease 2nd sem">-</button>
+              <input class="output-input" type="number" min="0" value="${member.second}" data-action="edit-output-second" data-id="${member.id}" aria-label="2nd sem outputs">
+              <button class="counter-button" type="button" data-action="plus-output-second" data-id="${member.id}" aria-label="Increase 2nd sem">+</button>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="member-actions">
         <button class="danger-button" type="button" data-action="delete-member" data-id="${member.id}">Delete</button>
@@ -489,14 +559,23 @@ function renderMembers() {
     </article>
   `).join("");
 
-  elements.memberList.querySelectorAll("[data-action='plus-output']").forEach((button) => {
-    button.addEventListener("click", () => updateMemberOutput(button.dataset.id, 1));
+  elements.memberList.querySelectorAll("[data-action='plus-output-first']").forEach((button) => {
+    button.addEventListener("click", () => updateMemberOutput(button.dataset.id, 1, "first"));
   });
-  elements.memberList.querySelectorAll("[data-action='minus-output']").forEach((button) => {
-    button.addEventListener("click", () => updateMemberOutput(button.dataset.id, -1));
+  elements.memberList.querySelectorAll("[data-action='minus-output-first']").forEach((button) => {
+    button.addEventListener("click", () => updateMemberOutput(button.dataset.id, -1, "first"));
   });
-  elements.memberList.querySelectorAll("[data-action='edit-output']").forEach((input) => {
-    input.addEventListener("change", () => setMemberTotal(input.dataset.id, Number(input.value || 0)));
+  elements.memberList.querySelectorAll("[data-action='plus-output-second']").forEach((button) => {
+    button.addEventListener("click", () => updateMemberOutput(button.dataset.id, 1, "second"));
+  });
+  elements.memberList.querySelectorAll("[data-action='minus-output-second']").forEach((button) => {
+    button.addEventListener("click", () => updateMemberOutput(button.dataset.id, -1, "second"));
+  });
+  elements.memberList.querySelectorAll("[data-action='edit-output-first']").forEach((input) => {
+    input.addEventListener("change", () => setMemberOutput(input.dataset.id, Number(input.value || 0), "first"));
+  });
+  elements.memberList.querySelectorAll("[data-action='edit-output-second']").forEach((input) => {
+    input.addEventListener("change", () => setMemberOutput(input.dataset.id, Number(input.value || 0), "second"));
   });
   elements.memberList.querySelectorAll("[data-action='delete-member']").forEach((button) => {
     button.addEventListener("click", () => deleteMember(button.dataset.id));
@@ -551,18 +630,26 @@ function renderSchedule() {
   });
 }
 
-function updateMemberOutput(memberId, delta) {
+function updateMemberOutput(memberId, delta, semester) {
   const member = state.members.find((item) => item.id === memberId);
   if (!member) return;
-  member.second = Math.max(0, Number(member.second || 0) + delta);
+  if (semester === "first") {
+    member.first = Math.max(0, Number(member.first || 0) + delta);
+  } else if (semester === "second") {
+    member.second = Math.max(0, Number(member.second || 0) + delta);
+  }
   saveState();
   render();
 }
 
-function setMemberTotal(memberId, total) {
+function setMemberOutput(memberId, value, semester) {
   const member = state.members.find((item) => item.id === memberId);
   if (!member) return;
-  member.second = Math.max(0, total - Number(member.first || 0));
+  if (semester === "first") {
+    member.first = Math.max(0, value);
+  } else if (semester === "second") {
+    member.second = Math.max(0, value);
+  }
   saveState();
   render();
 }
@@ -599,6 +686,30 @@ function transferEventSlot(eventId, slot, memberId) {
   render();
 }
 
+function removeEventAssignment(eventId, slot) {
+  const event = state.events.find((item) => item.id === eventId);
+  if (!event) return;
+
+  if (event.assigned.length === 1) {
+    event.assigned[slot] = "";
+  } else {
+    event.assigned.splice(slot, 1);
+  }
+
+  saveState();
+  render();
+}
+
+function addEventAssignmentSlot(eventId) {
+  const event = state.events.find((item) => item.id === eventId);
+  if (!event) return;
+  if (event.assigned.length < state.members.length) {
+    event.assigned.push("");
+    saveState();
+    render();
+  }
+}
+
 function setEventCompleted(eventId, completed) {
   const event = state.events.find((item) => item.id === eventId);
   if (!event) return;
@@ -618,7 +729,14 @@ function memberHasConflictForTransfer(member, event) {
 }
 
 function deleteMember(memberId) {
-  state.members = state.members.filter((member) => member.id !== memberId);
+  const member = state.members.find((item) => item.id === memberId);
+  if (!member) return;
+
+  if (!confirm(`Are you sure you want to SaShey away ${escapeHtml(member.name)}?`)) {
+    return;
+  }
+
+  state.members = state.members.filter((m) => m.id !== memberId);
   state.events.forEach((event) => {
     event.assigned = event.assigned.filter((id) => id !== memberId);
   });
