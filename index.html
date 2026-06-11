@@ -7,24 +7,21 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Scheduler">
   <title>Intervenor Scheduler</title>
-  <link rel="manifest" href="manifest.webmanifest?v=3">
+  <link rel="manifest" href="manifest.webmanifest?v=4">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=3">
+  <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
   <main class="app-shell">
     <header class="topbar">
       <div>
-        <p class="eyebrow">School publication</p>
-        <h1>Intervenor Scheduler</h1>
+        <p class="eyebrow">The Intervenor</p>
+        <h1>Planner</h1>
       </div>
-      <button class="icon-button" id="resetDemoButton" type="button" title="Load sample data" aria-label="Load sample data">
-        <span aria-hidden="true">R</span>
-      </button>
     </header>
 
     <section class="quick-panel">
@@ -112,11 +109,12 @@
           Role
           <select id="memberRole">
             <option>Photojournalist</option>
-            <option>Writer</option>
-            <option>Layout Artist</option>
-            <option>Editor</option>
-            <option>Videographer</option>
+            <option value="custom">Custom</option>
           </select>
+        </label>
+        <label class="hidden-field" id="customRoleWrap">
+          Custom role
+          <input id="customRole" type="text" placeholder="e.g. Sports photographer">
         </label>
         <div class="two-grid">
           <label>
@@ -197,6 +195,6 @@
     </div>
   </template>
 
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>

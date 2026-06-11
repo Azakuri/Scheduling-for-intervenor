@@ -225,6 +225,14 @@ h1 {
   gap: 8px;
 }
 
+.hidden-field {
+  display: none;
+}
+
+.hidden-field.active {
+  display: grid;
+}
+
 label {
   display: grid;
   gap: 6px;
@@ -501,6 +509,7 @@ select:focus {
   .tab-panel.active {
     display: grid;
     grid-template-columns: minmax(300px, 390px) 1fr;
+    grid-template-rows: auto 1fr;
     align-items: start;
     gap: 18px;
   }
@@ -516,17 +525,21 @@ select:focus {
 
   .section-heading.inline {
     grid-column: 2;
+    grid-row: 1;
     margin-top: 0;
   }
 
   .list-stack,
   .schedule-board {
     grid-column: 2;
+    grid-row: 2;
   }
 
   .form-panel {
     position: sticky;
     top: 78px;
+    grid-column: 1;
+    grid-row: 1 / span 2;
   }
 
   .schedule-board {

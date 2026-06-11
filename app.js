@@ -114,10 +114,11 @@ function initialize() {
     render();
   });
   $("#clearScheduleButton").addEventListener("click", clearAllSchedules);
-  $("#resetDemoButton").addEventListener("click", resetDemo);
+  $("#memberRole").addEventListener("change", toggleCustomRole);
 
   registerServiceWorker();
   $("#eventDate").value = todayValue();
+  toggleCustomRole();
   render();
 }
 
@@ -186,12 +187,17 @@ function addEvent(event) {
 function addMember(event) {
   event.preventDefault();
   const name = $("#memberName").value.trim();
+  const role = getSelectedRole();
   if (!name) return;
+  if (!role) {
+    alert("Please enter a custom role.");
+    return;
+  }
 
   state.members.push({
     id: uid("member"),
     name,
-    role: $("#memberRole").value,
+    role,
     first: Math.max(0, Number($("#memberFirst").value || 0)),
     second: Math.max(0, Number($("#memberSecond").value || 0)),
     school: []
@@ -200,8 +206,22 @@ function addMember(event) {
   event.target.reset();
   $("#memberFirst").value = 0;
   $("#memberSecond").value = 0;
+  toggleCustomRole();
   saveState();
   render();
+}
+
+function getSelectedRole() {
+  const selected = $("#memberRole").value;
+  if (selected !== "custom") return selected;
+  return $("#customRole").value.trim();
+}
+
+function toggleCustomRole() {
+  const isCustom = $("#memberRole").value === "custom";
+  $("#customRoleWrap").classList.toggle("active", isCustom);
+  $("#customRole").required = isCustom;
+  if (!isCustom) $("#customRole").value = "";
 }
 
 function addSchoolBlock(event) {
@@ -610,13 +630,6 @@ function clearAllSchedules() {
   state.members.forEach((member) => {
     member.school = [];
   });
-  saveState();
-  render();
-}
-
-function resetDemo() {
-  state = structuredClone(sampleState);
-  autoAssignAll(false);
   saveState();
   render();
 }
