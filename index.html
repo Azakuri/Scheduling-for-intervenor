@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#145da0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Scheduler">
+  <title>Intervenor Scheduler</title>
+  <link rel="manifest" href="manifest.webmanifest?v=3">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">School publication</p>
+        <h1>Intervenor Scheduler</h1>
+      </div>
+      <button class="icon-button" id="resetDemoButton" type="button" title="Load sample data" aria-label="Load sample data">
+        <span aria-hidden="true">R</span>
+      </button>
+    </header>
+
+    <section class="quick-panel">
+      <div>
+        <p class="label">Next event</p>
+        <h2 id="nextEventTitle">No assigned event yet</h2>
+        <p id="nextEventMeta">Add an event and press auto assign.</p>
+      </div>
+      <div class="score-pill">
+        <span id="memberCount">0</span>
+        <small>members</small>
+      </div>
+    </section>
+
+    <nav class="tabbar" aria-label="Main views">
+      <button class="tab-button active" type="button" data-tab="events">Events</button>
+      <button class="tab-button" type="button" data-tab="completed">Done</button>
+      <button class="tab-button" type="button" data-tab="members">Members</button>
+      <button class="tab-button" type="button" data-tab="schedule">Schedule</button>
+    </nav>
+
+    <section class="tab-panel active" id="eventsPanel">
+      <form class="form-panel" id="eventForm">
+        <div class="section-heading">
+          <h2>Add Event</h2>
+          <p>Auto assign avoids school conflicts.</p>
+        </div>
+        <label>
+          Event title
+          <input id="eventTitle" type="text" placeholder="e.g. Foundation Day coverage" required>
+        </label>
+        <div class="two-grid">
+          <label>
+            Date
+            <input id="eventDate" type="date" required>
+          </label>
+          <label>
+            Needed
+            <input id="eventNeeded" type="number" min="1" max="20" value="2" required>
+          </label>
+        </div>
+        <div class="two-grid">
+          <label>
+            Start
+            <input id="eventStart" type="time" value="09:00" required>
+          </label>
+          <label>
+            End
+            <input id="eventEnd" type="time" value="11:00" required>
+          </label>
+        </div>
+        <button class="primary-button" type="submit">Add and auto assign</button>
+      </form>
+
+      <div class="section-heading inline">
+        <h2>Events</h2>
+        <button class="ghost-button" id="autoAssignAllButton" type="button">Auto assign all</button>
+      </div>
+      <div class="list-stack" id="eventList"></div>
+    </section>
+
+    <section class="tab-panel" id="completedPanel">
+      <div class="full-panel">
+        <div class="section-heading inline">
+          <div>
+            <h2>Completed Events</h2>
+            <p>Finished events are kept here for checking and reopening.</p>
+          </div>
+        </div>
+        <div class="list-stack" id="completedList"></div>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="membersPanel">
+      <form class="form-panel" id="memberForm">
+        <div class="section-heading">
+          <h2>Add Member</h2>
+          <p>Output count is editable anytime.</p>
+        </div>
+        <label>
+          Member name
+          <input id="memberName" type="text" placeholder="e.g. Maria Santos" required>
+        </label>
+        <label>
+          Role
+          <select id="memberRole">
+            <option>Photojournalist</option>
+            <option>Writer</option>
+            <option>Layout Artist</option>
+            <option>Editor</option>
+            <option>Videographer</option>
+          </select>
+        </label>
+        <div class="two-grid">
+          <label>
+            1st Sem outputs
+            <input id="memberFirst" type="number" min="0" value="0">
+          </label>
+          <label>
+            2nd Sem outputs
+            <input id="memberSecond" type="number" min="0" value="0">
+          </label>
+        </div>
+        <button class="primary-button" type="submit">Insert member</button>
+      </form>
+
+      <div class="section-heading inline">
+        <h2>Members</h2>
+        <div class="inline-actions">
+          <button class="ghost-button" id="sortMembersAlphaButton" type="button">Sort A-Z</button>
+          <button class="ghost-button" id="sortMembersButton" type="button">Sort by load</button>
+        </div>
+      </div>
+      <div class="list-stack" id="memberList"></div>
+    </section>
+
+    <section class="tab-panel" id="schedulePanel">
+      <form class="form-panel" id="schoolForm">
+        <div class="section-heading">
+          <h2>School Schedule</h2>
+          <p>Add class times that should block event assignment.</p>
+        </div>
+        <label>
+          Member
+          <select id="schoolMember"></select>
+        </label>
+        <div class="two-grid">
+          <label>
+            Day
+            <select id="schoolDay">
+              <option value="1">Monday</option>
+              <option value="2">Tuesday</option>
+              <option value="3">Wednesday</option>
+              <option value="4">Thursday</option>
+              <option value="5">Friday</option>
+              <option value="6">Saturday</option>
+              <option value="0">Sunday</option>
+            </select>
+          </label>
+          <label>
+            Subject
+            <input id="schoolSubject" type="text" placeholder="Class / activity">
+          </label>
+        </div>
+        <div class="two-grid">
+          <label>
+            Start
+            <input id="schoolStart" type="time" value="08:00" required>
+          </label>
+          <label>
+            End
+            <input id="schoolEnd" type="time" value="10:00" required>
+          </label>
+        </div>
+        <button class="primary-button" type="submit">Save schedule</button>
+      </form>
+
+      <div class="section-heading inline">
+        <h2>Weekly Blocks</h2>
+        <button class="ghost-button" id="clearScheduleButton" type="button">Clear all</button>
+      </div>
+      <div class="schedule-board" id="scheduleBoard"></div>
+    </section>
+  </main>
+
+  <template id="emptyTemplate">
+    <div class="empty-state">
+      <strong>Nothing here yet</strong>
+      <span>Add a record using the form above.</span>
+    </div>
+  </template>
+
+  <script src="app.js?v=3"></script>
+</body>
+</html>
