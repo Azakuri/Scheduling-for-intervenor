@@ -57,7 +57,8 @@ const sampleState = {
       end: "08:30",
       needed: 2,
       assigned: [],
-      semester: "both"
+      semester: "both",
+      outputValue: 1
     }
   ]
 };
@@ -117,6 +118,15 @@ function initialize() {
   });
   $("#clearScheduleButton").addEventListener("click", clearAllSchedules);
   $("#memberRole").addEventListener("change", toggleCustomRole);
+  $("#settingsButton").addEventListener("click", toggleSettingsMenu);
+  document.addEventListener("click", closeSettingsMenuOnOutsideClick);
+  document.addEventListener("keydown", closeSettingsMenuOnEscape);
+  $("#exportButton").addEventListener("click", exportData);
+  $("#importButton").addEventListener("click", () => $("#importFile").click());
+  $("#importFile").addEventListener("change", importData);
+  $("#clearAllButton").addEventListener("click", clearAllData);
+  $("#clearCancelButton").addEventListener("click", hideClearWarning);
+  $("#clearConfirmButton").addEventListener("click", confirmClearAllData);
 
   registerServiceWorker();
   $("#eventDate").value = todayValue();
@@ -138,6 +148,7 @@ function loadState() {
       event.completed ||= false;
       event.assigned ||= [];
       event.semester ||= "both";
+      event.outputValue ||= 1;
     });
     return saved;
   } catch {
@@ -161,15 +172,23 @@ function todayValue() {
 
 function addEvent(event) {
   event.preventDefault();
+  const title = $("#eventTitle").value.trim();
+  
+  if (!title) {
+    alert("Please enter an event title.");
+    return;
+  }
+  
   const newEvent = {
     id: uid("event"),
-    title: $("#eventTitle").value.trim(),
+    title: title,
     date: $("#eventDate").value,
     start: $("#eventStart").value,
     end: $("#eventEnd").value,
     needed: Math.max(1, Number($("#eventNeeded").value)),
     assigned: [],
-    semester: $("#eventSemester").value
+    semester: $("#eventSemester").value,
+    outputValue: Math.max(1, Number($("#eventOutput").value || 1))
   };
 
   if (!isValidTimeRange(newEvent.start, newEvent.end)) {
@@ -185,21 +204,30 @@ function addEvent(event) {
   $("#eventStart").value = "09:00";
   $("#eventEnd").value = "11:00";
   $("#eventSemester").value = "both";
+  $("#eventOutput").value = 1;
   saveState();
   render();
 }
 
 function addEventManually(event) {
   event.preventDefault();
+  const title = $("#eventTitle").value.trim();
+  
+  if (!title) {
+    alert("Please enter an event title.");
+    return;
+  }
+  
   const newEvent = {
     id: uid("event"),
-    title: $("#eventTitle").value.trim(),
+    title: title,
     date: $("#eventDate").value,
     start: $("#eventStart").value,
     end: $("#eventEnd").value,
     needed: Math.max(1, Number($("#eventNeeded").value)),
     assigned: [],
-    semester: $("#eventSemester").value
+    semester: $("#eventSemester").value,
+    outputValue: Math.max(1, Number($("#eventOutput").value || 1))
   };
 
   if (!isValidTimeRange(newEvent.start, newEvent.end)) {
@@ -214,18 +242,31 @@ function addEventManually(event) {
   $("#eventStart").value = "09:00";
   $("#eventEnd").value = "11:00";
   $("#eventSemester").value = "both";
+  $("#eventOutput").value = 1;
   saveState();
   render();
   activateTab("events");
+  alert("Event added! Assign members manually using the Edit assignments section.");
 }
 
 function addMember(event) {
   event.preventDefault();
   const name = $("#memberName").value.trim();
   const role = getSelectedRole();
-  if (!name) return;
+  
+  if (!name) {
+    alert("Please enter a member name.");
+    return;
+  }
+  
   if (!role) {
     alert("Please enter a custom role.");
+    return;
+  }
+
+  // Check for duplicate names
+  if (state.members.some(m => m.name.toLowerCase() === name.toLowerCase())) {
+    alert("A member with this name already exists.");
     return;
   }
 
@@ -244,6 +285,7 @@ function addMember(event) {
   toggleCustomRole();
   saveState();
   render();
+  alert("Member added successfully!");
 }
 
 function getSelectedRole() {
@@ -358,9 +400,15 @@ function render() {
 
 function renderSummary() {
   elements.memberCount.textContent = state.members.length;
+  
+  const activeEvents = state.events.filter((event) => !event.completed);
+  const completedEvents = state.events.filter((event) => event.completed);
+  
+  document.getElementById("eventCount").textContent = activeEvents.length;
+  document.getElementById("completedCount").textContent = completedEvents.length;
+  
   const now = new Date();
-  const next = [...state.events]
-    .filter((event) => !event.completed && new Date(`${event.date}T${event.end}`) >= now)
+  const next = activeEvents
     .sort((a, b) => `${a.date}T${a.start}`.localeCompare(`${b.date}T${b.start}`))[0];
 
   if (!next) {
@@ -520,44 +568,48 @@ function renderMembers() {
     return;
   }
 
-  elements.memberList.innerHTML = state.members.map((member) => `
-    <article class="member-card">
-      <div class="member-grid">
-        <div>
-          <h3 class="card-title">${escapeHtml(member.name)}</h3>
-          <p class="meta">${escapeHtml(member.role)} - ${member.school.length} school block${member.school.length === 1 ? "" : "s"}</p>
-        </div>
-      </div>
-      <div class="badge-row">
-        <span class="badge">1st Sem: ${member.first}</span>
-        <span class="badge">2nd Sem: ${member.second}</span>
-        <span class="badge ok">Total: ${totalOutputs(member)}</span>
-      </div>
-      <div class="output-box" aria-label="Output counter">
-        <div style="display: grid; gap: 8px; grid-template-columns: 1fr 1fr;">
-          <div>
-            <small style="color: #667085; font-weight: 800; display: block; margin-bottom: 4px;">1st Sem</small>
-            <div style="display: grid; grid-template-columns: 40px minmax(56px, 72px) 40px; gap: 6px; align-items: center;">
-              <button class="counter-button" type="button" data-action="minus-output-first" data-id="${member.id}" aria-label="Decrease 1st sem">-</button>
-              <input class="output-input" type="number" min="0" value="${member.first}" data-action="edit-output-first" data-id="${member.id}" aria-label="1st sem outputs">
-              <button class="counter-button" type="button" data-action="plus-output-first" data-id="${member.id}" aria-label="Increase 1st sem">+</button>
-            </div>
-          </div>
-          <div>
-            <small style="color: #667085; font-weight: 800; display: block; margin-bottom: 4px;">2nd Sem</small>
-            <div style="display: grid; grid-template-columns: 40px minmax(56px, 72px) 40px; gap: 6px; align-items: center;">
-              <button class="counter-button" type="button" data-action="minus-output-second" data-id="${member.id}" aria-label="Decrease 2nd sem">-</button>
-              <input class="output-input" type="number" min="0" value="${member.second}" data-action="edit-output-second" data-id="${member.id}" aria-label="2nd sem outputs">
-              <button class="counter-button" type="button" data-action="plus-output-second" data-id="${member.id}" aria-label="Increase 2nd sem">+</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="member-actions">
-        <button class="danger-button" type="button" data-action="delete-member" data-id="${member.id}">Delete</button>
-      </div>
-    </article>
-  `).join("");
+  elements.memberList.innerHTML = `
+    <div class="table-container">
+      <table class="members-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Role</th>
+            <th>1st Sem</th>
+            <th>2nd Sem</th>
+            <th>Total</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${state.members.map((member) => `
+            <tr data-member-id="${member.id}">
+              <td><strong>${escapeHtml(member.name)}</strong></td>
+              <td>${escapeHtml(member.role)}</td>
+              <td>
+                <div class="output-cell">
+                  <button class="counter-button" type="button" data-action="minus-output-first" data-id="${member.id}" aria-label="Decrease 1st sem">-</button>
+                  <input class="output-input" type="number" min="0" value="${member.first}" data-action="edit-output-first" data-id="${member.id}" aria-label="1st sem outputs">
+                  <button class="counter-button" type="button" data-action="plus-output-first" data-id="${member.id}" aria-label="Increase 1st sem">+</button>
+                </div>
+              </td>
+              <td>
+                <div class="output-cell">
+                  <button class="counter-button" type="button" data-action="minus-output-second" data-id="${member.id}" aria-label="Decrease 2nd sem">-</button>
+                  <input class="output-input" type="number" min="0" value="${member.second}" data-action="edit-output-second" data-id="${member.id}" aria-label="2nd sem outputs">
+                  <button class="counter-button" type="button" data-action="plus-output-second" data-id="${member.id}" aria-label="Increase 2nd sem">+</button>
+                </div>
+              </td>
+              <td><span class="badge ok">${totalOutputs(member)}</span></td>
+              <td>
+                <button class="danger-button" type="button" data-action="delete-member" data-id="${member.id}" style="font-size: 0.75rem; min-height: 32px; padding: 0 8px;">Delete</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
 
   elements.memberList.querySelectorAll("[data-action='plus-output-first']").forEach((button) => {
     button.addEventListener("click", () => updateMemberOutput(button.dataset.id, 1, "first"));
@@ -720,6 +772,24 @@ function setEventCompleted(eventId, completed) {
   }
 
   event.completed = completed;
+
+  // Auto-increment member outputs when marking event as completed
+  if (completed) {
+    const outputValue = event.outputValue || 1;
+    event.assigned.forEach((memberId) => {
+      const member = state.members.find((m) => m.id === memberId);
+      if (member) {
+        if (event.semester === "1st") {
+          member.first += outputValue;
+        } else if (event.semester === "2nd") {
+          member.second += outputValue;
+        } else if (event.semester === "both") {
+          member.second += outputValue;
+        }
+      }
+    });
+  }
+
   saveState();
   render();
 }
@@ -757,6 +827,110 @@ function registerServiceWorker() {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./service-worker.js").catch(() => {});
   });
+}
+
+function toggleSettingsMenu(event) {
+  event.stopPropagation();
+  const button = $("#settingsButton");
+  const popover = $("#settingsPopover");
+  const isOpen = !popover.hidden;
+
+  popover.hidden = isOpen;
+  button.setAttribute("aria-expanded", String(!isOpen));
+}
+
+function closeSettingsMenu() {
+  const button = $("#settingsButton");
+  const popover = $("#settingsPopover");
+  if (!button || !popover) return;
+
+  popover.hidden = true;
+  button.setAttribute("aria-expanded", "false");
+}
+
+function closeSettingsMenuOnOutsideClick(event) {
+  const menu = $("#settingsMenu");
+  if (menu && !menu.contains(event.target)) {
+    closeSettingsMenu();
+  }
+}
+
+function closeSettingsMenuOnEscape(event) {
+  if (event.key === "Escape") {
+    closeSettingsMenu();
+    hideClearWarning();
+  }
+}
+
+function exportData() {
+  closeSettingsMenu();
+  const dataStr = JSON.stringify(state, null, 2);
+  const dataBlob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(dataBlob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `intervenor-scheduler-${new Date().toISOString().slice(0, 10)}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(event) {
+  closeSettingsMenu();
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      
+      // Validate the structure
+      if (!imported.members || !imported.events) {
+        alert("Invalid data format. Please check your file.");
+        return;
+      }
+
+      // Confirm before overwriting
+      if (!confirm("Replace all data with imported data? This cannot be undone.")) {
+        return;
+      }
+
+      state = imported;
+      saveState();
+      render();
+      alert("Data imported successfully!");
+    } catch (error) {
+      alert("Error reading file: " + error.message);
+    }
+  };
+  reader.readAsText(file);
+  
+  // Reset the file input
+  event.target.value = "";
+}
+
+function clearAllData() {
+  closeSettingsMenu();
+  showClearWarning();
+}
+
+function showClearWarning() {
+  $("#clearConfirmDialog").hidden = false;
+  $("#clearCancelButton").focus();
+}
+
+function hideClearWarning() {
+  const dialog = $("#clearConfirmDialog");
+  if (dialog) dialog.hidden = true;
+}
+
+function confirmClearAllData() {
+  hideClearWarning();
+  state = structuredClone(sampleState);
+  autoAssignAll(false);
+  saveState();
+  render();
+  alert("All data has been cleared and reset to defaults.");
 }
 
 function renderEmpty(container) {

@@ -46,9 +46,65 @@ button {
 .topbar {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 16px;
   padding: 8px 2%;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.settings-menu {
+  position: relative;
+}
+
+.settings-button {
+  min-width: 112px;
+}
+
+.settings-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  display: grid;
+  width: 190px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.settings-popover[hidden] {
+  display: none;
+}
+
+.settings-item {
+  min-height: 44px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  padding: 0 14px;
+  text-align: left;
+  font-weight: 800;
+}
+
+.settings-item:last-child {
+  border-bottom: 0;
+}
+
+.settings-item:hover {
+  background: #f5f8fb;
+}
+
+.settings-item.danger {
+  color: #a33445;
 }
 
 .eyebrow,
@@ -81,6 +137,7 @@ h1 {
   align-items: center;
   gap: 0;
   text-align: center;
+  flex: 1;
 }
 
 .header-center h1 {
@@ -133,6 +190,18 @@ h1 {
   gap: 14px;
   padding: 18px;
   border-left: 7px solid var(--blue);
+  flex-wrap: wrap;
+}
+
+.quick-panel > div:first-child {
+  flex: 1;
+  min-width: 250px;
+}
+
+.stats-pills {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(76px, 1fr));
+  gap: 10px;
 }
 
 .quick-panel h2 {
@@ -526,6 +595,204 @@ select:focus {
   color: var(--ink);
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(23, 33, 47, 0.46);
+}
+
+.modal-backdrop[hidden] {
+  display: none;
+}
+
+.confirm-dialog {
+  display: grid;
+  width: min(100%, 430px);
+  gap: 12px;
+  border: 1px solid rgba(217, 98, 115, 0.45);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+.confirm-dialog h2 {
+  margin: 0;
+  color: #a33445;
+  font-size: 1.1rem;
+}
+
+.confirm-dialog p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid rgba(139, 151, 171, 0.42);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow);
+}
+
+.members-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.86rem;
+}
+
+.members-table thead {
+  background: #f5f8fb;
+  position: sticky;
+  top: 0;
+}
+
+.members-table th {
+  padding: 10px;
+  text-align: left;
+  font-weight: 700;
+  color: #3a4758;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--line);
+}
+
+.members-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  vertical-align: middle;
+}
+
+.members-table th:nth-child(1),
+.members-table td:nth-child(1) {
+  width: 20%;
+}
+
+.members-table th:nth-child(2),
+.members-table td:nth-child(2) {
+  width: 20%;
+}
+
+.members-table th:nth-child(3),
+.members-table td:nth-child(3),
+.members-table th:nth-child(4),
+.members-table td:nth-child(4) {
+  width: 18%;
+}
+
+.members-table th:nth-child(5),
+.members-table td:nth-child(5) {
+  width: 10%;
+  text-align: center;
+}
+
+.members-table th:nth-child(6),
+.members-table td:nth-child(6) {
+  width: 14%;
+  text-align: right;
+}
+
+.members-table tbody tr:hover {
+  background: #f9fbfc;
+}
+
+.members-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.output-cell {
+  display: grid;
+  grid-template-columns: 30px minmax(38px, 44px) 30px;
+  gap: 3px;
+  align-items: center;
+  justify-content: start;
+}
+
+.members-table .counter-button {
+  width: 30px;
+  height: 30px;
+  font-size: 0.82rem;
+}
+
+.members-table .output-input {
+  min-height: 30px;
+  font-size: 0.84rem;
+}
+
+/* Button improvements */
+.primary-button:hover,
+.ghost-button:hover,
+.danger-button:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.primary-button:active,
+.ghost-button:active,
+.danger-button:active {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Input improvements */
+input,
+select {
+  transition: all 0.2s ease;
+}
+
+input:focus,
+select:focus {
+  transform: scale(1.01);
+}
+
+/* Badge improvements */
+.badge {
+  transition: all 0.2s ease;
+}
+
+/* Table responsive improvements */
+.table-container {
+  transition: all 0.3s ease;
+}
+
+/* Animation for added elements */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.event-card,
+.member-card,
+tbody tr {
+  animation: slideIn 0.3s ease;
+}
+
 @media (min-width: 760px) {
   .app-shell {
     width: min(100%, 1040px);
@@ -546,6 +813,24 @@ select:focus {
   #completedPanel .full-panel {
     max-width: 720px;
     margin: 0 auto;
+  }
+
+  #membersPanel.tab-panel.active {
+    grid-template-columns: minmax(230px, 270px) minmax(0, 1fr);
+  }
+
+  #membersPanel .form-panel {
+    gap: 10px;
+    padding: 14px;
+  }
+
+  #membersPanel input,
+  #membersPanel select {
+    min-height: 40px;
+  }
+
+  #membersPanel .primary-button {
+    min-height: 42px;
   }
 
   .section-heading.inline {

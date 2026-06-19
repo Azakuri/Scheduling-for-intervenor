@@ -1,0 +1,82 @@
+{
+  "name": "intervenor-scheduler",
+  "version": "2.0.0",
+  "description": "A progressive web app for managing event scheduling and member workload tracking for student publications",
+  "main": "app.js",
+  "author": "Your Name",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/intervenor-scheduler.git"
+  },
+  "keywords": [
+    "scheduler",
+    "event-management",
+    "pwa",
+    "progressive-web-app",
+    "team-management",
+    "scheduling",
+    "publication"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "scripts": {
+    "serve": "python -m http.server 8000",
+    "serve:node": "npx http-server -p 8000",
+    "start": "echo 'Open index.html in your browser'",
+    "test": "echo 'No tests configured yet'",
+    "build": "echo 'No build step required - vanilla JS'"
+  },
+  "devDependencies": {},
+  "dependencies": {},
+  "categories": [
+    "productivity",
+    "utilities"
+  ],
+  "screenshots": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "homepage": "https://github.com/yourusername/intervenor-scheduler#readme",
+  "bugs": {
+    "url": "https://github.com/yourusername/intervenor-scheduler/issues"
+  },
+  "features": [
+    "event-management",
+    "member-tracking",
+    "output-monitoring",
+    "schedule-conflict-detection",
+    "data-export-import",
+    "offline-support",
+    "pwa"
+  ],
+  "versions": {
+    "2.0.0": {
+      "date": "2025-06-19",
+      "highlights": [
+        "Event output value parameter",
+        "Member table view",
+        "Export/import functionality",
+        "Auto-completion output updating",
+        "Improved form validation",
+        "Enhanced dashboard statistics"
+      ]
+    },
+    "1.0.0": {
+      "date": "2025-01-01",
+      "highlights": [
+        "Initial release",
+        "Event management",
+        "Member tracking",
+        "Schedule conflict detection",
+        "PWA support"
+      ]
+    }
+  }
+}

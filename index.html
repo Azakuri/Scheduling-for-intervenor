@@ -7,13 +7,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Scheduler">
   <title>Intervenor Scheduler</title>
-  <link rel="manifest" href="manifest.webmanifest?v=2">
+  <link rel="manifest" href="manifest.webmanifest?v=4">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
   <main class="app-shell">
@@ -22,17 +22,40 @@
         <h1>THE INTERVENOR</h1>
         <p class="subtitle">PLANNER</p>
       </div>
+      <div class="header-actions">
+        <div class="settings-menu" id="settingsMenu">
+          <button class="ghost-button settings-button" id="settingsButton" type="button" aria-haspopup="true" aria-expanded="false">
+            Settings
+          </button>
+          <div class="settings-popover" id="settingsPopover" role="menu" aria-label="Data settings" hidden>
+            <button class="settings-item" id="exportButton" type="button" role="menuitem">Export data</button>
+            <button class="settings-item" id="importButton" type="button" role="menuitem">Import data</button>
+            <button class="settings-item danger" id="clearAllButton" type="button" role="menuitem">Clear all data</button>
+          </div>
+        </div>
+      </div>
     </header>
+    <input type="file" id="importFile" accept=".json" style="display: none;">
 
     <section class="quick-panel">
       <div>
-        <p class="label">Next event</p>
-        <h2 id="nextEventTitle">No assigned event yet</h2>
+        <p class="label">Next Event</p>
+        <h2 id="nextEventTitle">No upcoming event</h2>
         <p id="nextEventMeta">Add an event and press auto assign.</p>
       </div>
-      <div class="score-pill">
-        <span id="memberCount">0</span>
-        <small>members</small>
+      <div class="stats-pills">
+        <div class="score-pill">
+          <span id="memberCount">0</span>
+          <small>members</small>
+        </div>
+        <div class="score-pill" style="background: #fff3d8; color: #b8860b;">
+          <span id="eventCount">0</span>
+          <small>events</small>
+        </div>
+        <div class="score-pill" style="background: #e8f4f8; color: #0d477e;">
+          <span id="completedCount">0</span>
+          <small>completed</small>
+        </div>
       </div>
     </section>
 
@@ -63,6 +86,10 @@
             <input id="eventNeeded" type="number" min="1" max="20" value="2" required>
           </label>
         </div>
+        <label>
+          Output per member (default 1)
+          <input id="eventOutput" type="number" min="1" max="10" value="1" required>
+        </label>
         <div class="two-grid">
           <label>
             Start
@@ -206,6 +233,17 @@
     </div>
   </template>
 
-  <script src="app.js?v=2"></script>
+  <div class="modal-backdrop" id="clearConfirmDialog" hidden>
+    <section class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="clearConfirmTitle">
+      <h2 id="clearConfirmTitle">Clear all data?</h2>
+      <p>This will delete all saved members, events, schedules, and completed history, then reset the planner to defaults.</p>
+      <div class="confirm-actions">
+        <button class="ghost-button" id="clearCancelButton" type="button">Cancel</button>
+        <button class="danger-button" id="clearConfirmButton" type="button">Clear everything</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js?v=4"></script>
 </body>
 </html>
