@@ -1,10 +1,10 @@
-const CACHE_NAME = "intervenor-scheduler-v4";
+const CACHE_NAME = "intervenor-scheduler-v5";
 const APP_FILES = [
   "./",
   "./index.html",
-  "./styles.css?v=4",
-  "./app.js?v=4",
-  "./manifest.webmanifest?v=4",
+  "./styles.css?v=5",
+  "./app.js?v=5",
+  "./manifest.webmanifest?v=5",
   "./icons/icon.svg"
 ];
 
@@ -27,13 +27,37 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request).then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-        return response;
-      });
-    })
-  );
+  const url = new URL(event.request.url);
+  const isAppShell =
+    event.request.mode === "navigate" ||
+    url.pathname.endsWith("/") ||
+    url.pathname.endsWith("/index.html") ||
+    url.pathname.endsWith(".js") ||
+    url.pathname.endsWith(".css") ||
+    url.pathname.endsWith(".webmanifest");
+
+  event.respondWith(isAppShell ? networkFirst(event.request) : cacheFirst(event.request));
 });
+
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request, { cache: "no-store" });
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(request, response.clone());
+    return response;
+  } catch {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    return caches.match("./index.html");
+  }
+}
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+
+  const response = await fetch(request);
+  const cache = await caches.open(CACHE_NAME);
+  cache.put(request, response.clone());
+  return response;
+}
